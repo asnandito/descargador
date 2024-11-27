@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descargador de YouTube</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Descargador de Videos de YouTube</h1>
+        <div class="form-group">
+            <input type="text" 
+                   id="url" 
+                   placeholder="Pega aquí la URL del video de YouTube"
+                   autocomplete="off">
+        </div>
+        <button onclick="downloadVideo()" id="downloadBtn" class="button">
+            Descargar Video
+        </button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.style.display = 'block';
+            status.textContent = message;
+            status.className = type;
+        }
+
+        async function downloadVideo() {
+            const urlInput = document.getElementById('url');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const url = urlInput.value.trim();
+
+            if (!url) {
+                showStatus('Por favor, ingresa una URL válida', 'error');
+                return;
+            }
+
+            try {
+                downloadBtn.disabled = true;
+                showStatus('Descargando video...', 'loading');
+
+                const formData = new FormData();
+                formData.append('url', url);
+
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showStatus('¡Video descargado exitosamente!', 'success');
+                    window.location.href = `/download/${data.filename}`;
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                downloadBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html> 
